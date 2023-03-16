@@ -58,7 +58,7 @@ def UpdatePos(dctPacket):
 		oPosObject.SetElev(oPosObject, dctPacket["alt"])
 		
 	if "speed" in dctPacket.keys():
-		oPosObject.SetSpeed(oPosObject, dctPacket["speed"])
+		oPosObject.SetSpeed(oPosObject, dctPacket["speed"]*2.23694)
 		
 	if "track" in dctPacket.keys():
 		oPosObject.SetDirection(oPosObject, dctPacket["track"])
