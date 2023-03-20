@@ -19,6 +19,7 @@ LOGIN_FILE = "/home/pi/SNPosition/SNLogin"
 run = True
 APPLICATION_ID = ""
 seconds_since_update = 0.0
+seconds_since_gpsdconnet = 0.0
 PosLock = threading.Lock()
 oPosObject = SNPosObject
 if len(sys.argv) > 1 and sys.argv[1] and sys.argv[1].lower() == '-i':
@@ -94,20 +95,24 @@ def POSTUpdate():
 def ConnectToGPSD():
 	global PosLock
 	global run
-	oSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	oSocket.connect((TCP_IP, TCP_PORT))
-	oSocket.send(START_MESSAGE.encode('utf-8'))
-
 	while run:
-		data = oSocket.recv(BUFFER_SIZE)
-		arObjects = data.splitlines()
-		for line in arObjects:
-			#print(line)
-			dctPacket = json.loads(line.decode('utf-8'))
-			if dctPacket["class"] == "TPV":
-				with PosLock:					
-					UpdatePos(dctPacket)
-						
+		oSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		oSocket.connect((TCP_IP, TCP_PORT))
+		oSocket.send(START_MESSAGE.encode('utf-8'))
+		seconds_since_gpsdconnect = time.perf_counter()
+		
+		while run and (time.perf_counter() - seconds_since_gpsdconnect) < 2700:
+			data = oSocket.recv(BUFFER_SIZE)
+			arObjects = data.splitlines()
+			for line in arObjects:
+				#print(line)
+				dctPacket = json.loads(line.decode('utf-8'))
+				if dctPacket["class"] == "TPV":
+					with PosLock:					
+						UpdatePos(dctPacket)
+			
+		oSocket.close()
+		
 
 def UpdateSpotterNetwork():
 	global seconds_since_update
